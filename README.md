@@ -11,7 +11,4 @@
  3.  Integration of the proposed detection and extraction networks into a  full  pipeline  to  enable  stable  and  reliable  feature  matching  on  thermal  images.   
  4.  Achieve  a  superior  performance in visual and quantitative comparison compared withother widely used classical and most recent deep learning algorithms
 
-
-![out1_1](https://user-images.githubusercontent.com/50055930/97832135-0fc75980-1ca0-11eb-8e3b-1ef987612981.PNG)
-
 ![3_css_model](https://user-images.githubusercontent.com/50055930/97832178-22419300-1ca0-11eb-9233-540165a7887a.png)
