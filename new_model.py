@@ -3,7 +3,7 @@ from torchvision import models
 import torch.nn.functional as F
 import torch
 
-############################# Train by appending descriptors ##############################
+
 class Get_model(nn.Module):
     def __init__(self):
         super(Get_model, self).__init__()
