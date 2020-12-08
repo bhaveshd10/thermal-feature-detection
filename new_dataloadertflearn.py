@@ -7,7 +7,6 @@ class Data_loader():
     def __init__(self, patch_list, transform):
 
         self.patch_list = patch_list
-        # self.kpl = kpl
         self.transform = transform
 
     def __getitem__(self, index):
