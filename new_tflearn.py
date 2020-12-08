@@ -141,13 +141,11 @@ for epoch in range(1, 30 + 1):
     loss_train, accuracy_train = train(model,dataloader_train,criterion,optimizer,gt_train)
     acc_train.append(accuracy_train)
     print(f"  Train Loss: {loss_train / len(dataloader_train)}")
-    # acc_train.append(loss_acc_train[1])
     print(f"  Train Acc: {accuracy_train / len(dataloader_train)}")
 
     loss_test, accuracy_test = train(model,dataloader_test,criterion,optimizer,gt_test)
     acc_test.append(accuracy_test)
     print(f"  Train Loss: {loss_test / len(dataloader_test)}")
-    # acc_train.append(loss_acc_train[1])
     print(f"  Train Acc: {accuracy_test / len(dataloader_test)}")
 
     if epoch % 10 == 0:
