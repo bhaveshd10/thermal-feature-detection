@@ -90,9 +90,7 @@ def train(tnet, dataloader, criterion1,criterion2, optimizer, epoch):
 
         loss_triplet = criterion1(dista, distb, target)
         loss_mse = criterion2(embedded_x, d4.to(device))
-
-        # loss_embedd = embedded_x.norm(2) + embedded_y.norm(2) + embedded_z.norm(2)
-        loss = loss_triplet + loss_mse # + 0.001 * loss_embedd
+        loss = loss_triplet + loss_mse 
 
         # compute gradient and do optimizer step
         optimizer.zero_grad()
@@ -102,7 +100,7 @@ def train(tnet, dataloader, criterion1,criterion2, optimizer, epoch):
 
         running_loss += loss.item()
         correct += acc.item()
-        # prediction_train = np.hstack([prediction_train, pred])
+
         prediction_train = None
 
     return [running_loss, correct], prediction_train
@@ -130,12 +128,9 @@ def test(tnet, dataloader, criterion1,criterion2, epoch):
             test_loss = criterion1(dista, distb, target)
 
             acc, pred = accuracy(dista, distb)
-
             running_loss += test_loss.item()
-            # print(running_loss)
             correct += acc.item()
-            # prediction_test = np.hstack([prediction_test, pred])
-
+            
         return [running_loss, correct], None
 
 # Save results
@@ -173,16 +168,12 @@ for epoch in range(1, 70 + 1):
 fig, ((ax1, ax2),(ax3,ax4)) = plt.subplots(2, 2)
 ax1.plot(loss_train)
 ax1.set_title("Train Loss")
-# ax1.axis('off')
 ax2.plot(acc_train)
 ax2.set_title("Train Accuracy")
-# ax2.axis('off')
 ax3.plot(loss_test)
 ax3.set_title("Test Loss")
-# ax3.axis('off')
 ax4.plot(acc_test)
 ax4.set_title("Test Accuracy")
-
 plt.show()
 
 print('xxxxxxxxxxx finished  xxxxxxxxxxx')
