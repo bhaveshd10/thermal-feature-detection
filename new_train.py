@@ -10,7 +10,7 @@ import torch.utils.data
 from new_dataloader import Data_loader
 import os
 from new_getpatches import patches
-import argeparse
+import argparse
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
@@ -26,6 +26,7 @@ parser.add_argument('npatch_test', action="store")
 parser.add_argument('batch_size', action="store")
 parser.add_argument('workers', action="store")
 parser.add_argument('save_path', action="store")
+args = parser.parse_args()
 
 npatch_train = args.npatch_train
 npatch_test = args.npatch_test
