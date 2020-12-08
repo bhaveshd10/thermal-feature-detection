@@ -10,30 +10,33 @@ import torch.utils.data
 from new_dataloader import Data_loader
 import os
 from new_getpatches import patches
+import argeparse
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
 print(device)
 
-npatch_train = 210
-npatch_test = 10
-batch_size = 50
-workers = 0
+parser = argparse.ArgumentParser()
+parser.add_argument('rgb_path_train', action="store")
+parser.add_argument('thermal_path_train', action="store")
+parser.add_argument('rgb_path_test', action="store")
+parser.add_argument('thermal_path_test', action="store")
+parser.add_argument('npatch_train', action="store")
+parser.add_argument('npatch_test', action="store")
+parser.add_argument('batch_size', action="store")
+parser.add_argument('workers', action="store")
+parser.add_argument('save_path', action="store")
 
-rgb_path_train = 'C:/Users/bhave/PycharmProjects/thesis/kaist/train/new selected trainA/'
-thermal_path_train = 'C:/Users/bhave/PycharmProjects/thesis/kaist/train/new selected trainB/'
-rgb_path_test = 'C:/Users/bhave/PycharmProjects/thesis/kaist/test/a/'
-thermal_path_test = 'C:/Users/bhave/PycharmProjects/thesis/kaist/test/b/'
+npatch_train = args.npatch_train
+npatch_test = args.npatch_test
+batch_size = args.batch_size
+workers = args.workers
 
-rgb_train = os.listdir('C:/Users/bhave/PycharmProjects/thesis/kaist/train/new selected trainA/')
-thermal_train = os.listdir('C:/Users/bhave/PycharmProjects/thesis/kaist/train/new selected trainB/')
-rgb_test = os.listdir('C:/Users/bhave/PycharmProjects/thesis/kaist/test/a/')
-thermal_test = os.listdir('C:/Users/bhave/PycharmProjects/thesis/kaist/test/b/')
-
-getpatches = patches(rgb_path_train,thermal_path_train,rgb_train,thermal_train,npatch_train)
+# Get image patche pairs (Anchor/Positive/Negative)
+getpatches = patches(args.rgb_path_train,args.thermal_path_train,os.listdir(args.rgb_path_train),os.listdir(args.thermal_path_train),npatch_train)
 matches_train,descript_train = getpatches.getpatches()
 print(len(matches_train))
-getpatches = patches(rgb_path_test,thermal_path_test,rgb_test,thermal_test,npatch_test)
+getpatches = patches(args.rgb_path_test,args.thermal_path_test,os.listdir(args.rgb_path_test),os.listdir(args.thermal_path_test),npatch_test)
 matches_test,descript_test = getpatches.getpatches()
 print(len(matches_test))
 
@@ -51,17 +54,17 @@ dataset_test = Data_loader(matches_test,descript_test, transform=transform)
 dataloader_test = torch.utils.data.DataLoader(dataset_test, num_workers=workers, batch_size=batch_size, shuffle=False)
 print('Len dataloader test:' + str(len(dataloader_test)))
 
-import pdb
-pdb.set_trace()
+# Load model
 model = Get_model()
 model = model.to(device)
 tnet = Tripletnet(model)
 
+# Define criterion and optimizer
 criterion1 = torch.nn.MarginRankingLoss(margin=0.2)
 criterion2 = torch.nn.MSELoss()
 optimizer = optim.SGD(tnet.parameters(), lr=0.001, momentum=0.5)
 
-
+# accuracy calculations
 def accuracy(dista, distb):
     dista = dista.cpu().detach().numpy().reshape(dista.shape[0], -1)
     distb = distb.cpu().detach().numpy().reshape(dista.shape[0], -1)
@@ -69,7 +72,7 @@ def accuracy(dista, distb):
     y[dista < distb] = 1
     return sum(y) / dista.shape[0], y
 
-
+# Train function
 def train(tnet, dataloader, criterion1,criterion2, optimizer, epoch):
     tnet.train()
 
@@ -106,7 +109,7 @@ def train(tnet, dataloader, criterion1,criterion2, optimizer, epoch):
 
     return [running_loss, correct], prediction_train
 
-
+# Eval Function
 def test(tnet, dataloader, criterion1,criterion2, epoch):
     tnet.eval()
 
@@ -137,13 +140,14 @@ def test(tnet, dataloader, criterion1,criterion2, epoch):
 
         return [running_loss, correct], None
 
+# Save results
 directory = 'new_train'
-path = 'C:/Users/bhave/PycharmProjects/thesis/'
-savepath = os.path.join(path, directory)
+savepath = os.path.join(args.save_path, directory)
 
 if not os.path.exists(savepath):
     os.makedirs(savepath)
 
+# Train/Test model overtime
 loss_train = []
 acc_train = []
 loss_test = []
@@ -165,9 +169,9 @@ for epoch in range(1, 70 + 1):
     print(f"  Test Acc: {loss_acc_test[1] / len(dataloader_test)}")
 
     if epoch % 10 == 0:
-        # torch.save(model.state_dict(), os.path.join(savepath, "filename_model_"+str(epoch)+'_'+".pth"))
         torch.save(model, os.path.join(savepath, "new_train"+ '_' + str(epoch) + ".pth"))
 
+# Plot the Train/Test results
 fig, ((ax1, ax2),(ax3,ax4)) = plt.subplots(2, 2)
 ax1.plot(loss_train)
 ax1.set_title("Train Loss")
