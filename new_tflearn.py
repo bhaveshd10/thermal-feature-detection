@@ -12,48 +12,50 @@ from new_tflearngetpatches import patches
 
 device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
 print(device)
-npatch_train = 210
-npatch_test = 10
-batch_size = 1
-workers = 0
+parser = argparse.ArgumentParser()
+parser.add_argument('rgb_path_train', action="store")
+parser.add_argument('thermal_path_train', action="store")
+parser.add_argument('rgb_path_test', action="store")
+parser.add_argument('thermal_path_test', action="store")
+parser.add_argument('npatch_train', action="store")
+parser.add_argument('npatch_test', action="store")
+parser.add_argument('batch_size', action="store")
+parser.add_argument('workers', action="store")
+parser.add_argument('save_path', action="store")
+parser.add_argument('model_path', action="store")
 
-rgb_path_train = 'C:/Users/bhave/PycharmProjects/thesis/kaist/train/new selected trainA/'
-thermal_path_train = 'C:/Users/bhave/PycharmProjects/thesis/kaist/train/new selected trainB/'
-rgb_path_test = 'C:/Users/bhave/PycharmProjects/thesis/kaist/test/a/'
-thermal_path_test = 'C:/Users/bhave/PycharmProjects/thesis/kaist/test/b/'
+npatch_train = args.npatch_train
+npatch_test = args.npatch_test
+batch_size = args.batch_size
+workers = args.workers
 
-rgb_train = os.listdir('C:/Users/bhave/PycharmProjects/thesis/kaist/train/new selected trainA/')
-thermal_train = os.listdir('C:/Users/bhave/PycharmProjects/thesis/kaist/train/new selected trainB/')
-rgb_test = os.listdir('C:/Users/bhave/PycharmProjects/thesis/kaist/test/a/')
-thermal_test = os.listdir('C:/Users/bhave/PycharmProjects/thesis/kaist/test/b/')
-
-getpatches = patches(rgb_path_train,thermal_path_train,rgb_train,thermal_train,npatch_train)
-matches_train,gt_train = getpatches.getpatches()
+# Get Image patches
+getpatches = patches(args.rgb_path_train,args.thermal_path_train,os.listdir(args.rgb_path_train),os.listdir(args.thermal_path_train),npatch_train)
+matches_train,descript_train = getpatches.getpatches()
 print(len(matches_train))
-getpatches = patches(rgb_path_test,thermal_path_test,rgb_test,thermal_test,npatch_test)
-matches_test,gt_test = getpatches.getpatches()
+getpatches = patches(args.rgb_path_test,args.thermal_path_test,os.listdir(args.rgb_path_test),os.listdir(args.thermal_path_test),npatch_test)
+matches_test,descript_test = getpatches.getpatches()
 print(len(matches_test))
-
 
 transform = transforms.Compose([transforms.ToTensor()
                                    , transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
                                 ])
 
 dataset_train = Data_loader(matches_train, transform=transform)
-
 dataloader_train = torch.utils.data.DataLoader(dataset_train, num_workers=workers, batch_size=batch_size, shuffle=False)
 print('Len dataloader train:' + str(len(dataloader_train)))
 
 dataset_test = Data_loader(matches_test, transform=transform)
-
 dataloader_test = torch.utils.data.DataLoader(dataset_test, num_workers=workers, batch_size=batch_size, shuffle=False)
 print('Len dataloader test:' + str(len(dataloader_test)))
 
-model = torch.load('C:/Users/bhave/PycharmProjects/thesis/new_train/new_train_70.pth')
+# Load pretrained model
+model = torch.load(args.model_path)
 
 for param in model.parameters():
     param.requires_grad = False
 
+# Additional layers added to pretrained model for transfer learning
 lin = model.fc2
 new_lin = torch.nn.Sequential(lin, torch.nn.ReLU(), torch.nn.Linear(128, 64), torch.nn.ReLU(), torch.nn.Linear(64, 1))
 model.fc2 = new_lin
@@ -61,12 +63,13 @@ print(model)
 
 model.to(device)
 
+# Define criterion and optimizer
 criterion = torch.nn.BCELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 acc_train = []
 acc_test = []
 
-
+# Accuracy calculations
 def accuracy_(output,gt):
     if gt == 1 and output >= 0.7:
         return 1
@@ -75,7 +78,7 @@ def accuracy_(output,gt):
     else:
         return 0
 
-
+# Train function
 def train(model,dataloader,criterion,optimizer,target):
 
     running_loss, correct = 0.0, 0
@@ -100,6 +103,7 @@ def train(model,dataloader,criterion,optimizer,target):
 
     return running_loss, correct
 
+# Eval Function
 def test(model,dataloader,criterion,optimizer,target):
     model.eval()
     with torch.no_grad():
@@ -126,10 +130,12 @@ def test(model,dataloader,criterion,optimizer,target):
 
         return running_loss, correct
 
-savepath = 'C:/Users/bhave/PycharmProjects/thesis/new train'
+# Save results
+savepath = os.path.join(args.save_path, directory)
 if not os.path.exists(savepath):
     os.makedirs(savepath)
 
+# Train/Test model overtime
 for epoch in range(1, 30 + 1):
     print(f"Epoch {epoch}/{30}")
     loss_train, accuracy_train = train(model,dataloader_train,criterion,optimizer,gt_train)
