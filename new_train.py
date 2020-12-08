@@ -45,12 +45,10 @@ transform = transforms.Compose([transforms.ToTensor()
                                 ])
 
 dataset_train = Data_loader(matches_train,descript_train, transform=transform)
-
 dataloader_train = torch.utils.data.DataLoader(dataset_train, num_workers=workers, batch_size=batch_size, shuffle=False)
 print('Len dataloader train:' + str(len(dataloader_train)))
 
 dataset_test = Data_loader(matches_test,descript_test, transform=transform)
-
 dataloader_test = torch.utils.data.DataLoader(dataset_test, num_workers=workers, batch_size=batch_size, shuffle=False)
 print('Len dataloader test:' + str(len(dataloader_test)))
 
