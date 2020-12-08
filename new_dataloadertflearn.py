@@ -15,7 +15,6 @@ class Data_loader():
         query = query[:, :, ::-1]
 
         query = Image.fromarray(query.astype(np.uint8))
-        # kp_list= self.kpl[index]
 
         if self.transform is not None:
             query = self.transform(query)
